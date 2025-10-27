@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.10.5-management
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    networks:
+      - curso-microsservicos
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - rabbitmq_log:/var/lib/rabbitmq
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - curso-microsservicos
+  postgres:
+    image: postgres:15.7
+    container_name: postgresql-15.7
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - curso-microsservicos
+volumes:
+  rabbitmq_data:
+  rabbitmq_log:
+  postgres_data:
+networks:
+  curso-microsservicos:
+    driver: bridge
