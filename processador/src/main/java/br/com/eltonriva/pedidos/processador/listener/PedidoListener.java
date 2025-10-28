@@ -1,22 +1,21 @@
 package br.com.eltonriva.pedidos.processador.listener;
 
-import br.com.eltonriva.pedidos.processador.entity.Pedido;
-import br.com.eltonriva.pedidos.processador.entity.enums.Status;
-import br.com.eltonriva.pedidos.processador.service.PedidoService;
+import br.com.eltonriva.pedidos.processador.dto.PedidoEventDto;
+import br.com.eltonriva.pedidos.processador.service.ProcessamentoService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PedidoListener {
-    private final PedidoService pedidoService;
+    private final ProcessamentoService processamentoService;
 
-    public PedidoListener(PedidoService pedidoService) {
-        this.pedidoService = pedidoService;
+    public PedidoListener(ProcessamentoService processamentoService) {
+        this.processamentoService = processamentoService;
     }
 
     @RabbitListener(queues = "${rabbitmq.queue.name}")
-    public void salvarPedido(Pedido pedido) {
-        pedido.setStatus(Status.PROCESSADO);
-        this.pedidoService.save(pedido);
+    public void consumir(PedidoEventDto dto, @Header(name = "x-correlation-id", required = false) String correlationId) {
+        this.processamentoService.processar(dto, correlationId);
     }
 }
