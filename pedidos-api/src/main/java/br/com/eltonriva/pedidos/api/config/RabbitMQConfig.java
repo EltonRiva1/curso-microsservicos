@@ -8,10 +8,15 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuração do publisher RabbitMQ para o pedidos-api.
+ * - Exchange FANOUT onde os eventos são publicados.
+ * - RabbitTemplate com conversor JSON.
+ * - RabbitAdmin para declarar o exchange (útil em dev).
+ */
 @Configuration
 public class RabbitMQConfig {
     @Value("${rabbitmq.exchange.name}")
@@ -19,15 +24,14 @@ public class RabbitMQConfig {
 
     /**
      * Exchange fanout onde o 'pedidos-api' PUBLICA eventos.
-     * Em fanout, todos os consumidores ligados a esse exchange recebem a mensagem.
      */
     @Bean
     public Exchange pedidosExchange() {
-        return new FanoutExchange(this.exchangeName);
+        return new FanoutExchange(this.exchangeName, true, false);
     }
 
     /**
-     * Admin do RabbitMQ que declara exchanges/filas/bindings na subida.
+     * Declara o exchange na subida (especialmente útil em ambientes locais).
      */
     @Bean
     public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
@@ -35,7 +39,7 @@ public class RabbitMQConfig {
     }
 
     /**
-     * Conversor Jackson para serializar o Pedido em JSON ao publicar.
+     * Conversor Jackson para serializar o evento em JSON.
      */
     @Bean
     public MessageConverter messageConverter() {
@@ -43,21 +47,12 @@ public class RabbitMQConfig {
     }
 
     /**
-     * Template usado para publicar mensagens no exchange (convertAndSend).
-     * Configurado com o conversor JSON.
+     * Template de publicação configurado com JSON.
      */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
-        var rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(messageConverter);
-        return rabbitTemplate;
-    }
-
-    /**
-     * Inicializa o RabbitAdmin ao subir a aplicação.
-     */
-    @Bean
-    public ApplicationListener<?> applicationListener(RabbitAdmin rabbitAdmin) {
-        return event -> rabbitAdmin.initialize();
+        var rt = new RabbitTemplate(connectionFactory);
+        rt.setMessageConverter(messageConverter);
+        return rt;
     }
 }
