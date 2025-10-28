@@ -5,40 +5,45 @@ services:
     image: rabbitmq:3.10.5-management
     container_name: rabbitmq
     ports:
-      - "15672:15672"
-      - "5672:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+      - "${RABBITMQ_AMQP_PORT}:5672"
     environment:
-      RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: rabbitmq
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
     networks:
       - curso-microsservicos
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-      - rabbitmq_log:/var/lib/rabbitmq
+      - rabbitmq_log:/var/log/rabbitmq
+
   mailhog:
     image: mailhog/mailhog:latest
     container_name: mailhog
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${MAILHOG_SMTP_PORT}:1025"
+      - "${MAILHOG_UI_PORT}:8025"
     networks:
       - curso-microsservicos
+
   postgres:
     image: postgres:15.7
-    container_name: postgresql-15.7
+    container_name: postgres
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - curso-microsservicos
+
+networks:
+  curso-microsservicos:
+    driver: bridge
+
 volumes:
   rabbitmq_data:
   rabbitmq_log:
   postgres_data:
-networks:
-  curso-microsservicos:
-    driver: bridge
